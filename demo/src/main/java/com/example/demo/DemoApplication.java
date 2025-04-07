@@ -1,15 +1,12 @@
 package com.example.demo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -54,6 +51,8 @@ class GameController {
         System.out.println( "Creating room: " + name);
         if (!rooms.containsKey(name)) {
             rooms.put(name, new GameRoom(name, messagingTemplate));
+            //Envia mensagem para o tópico topix/home que criou uma sala
+            messagingTemplate.convertAndSend("/topic/home", "Room created: " + name);
             return "Room created: " + name;
         }
         return "Room already exists.";

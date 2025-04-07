@@ -1,6 +1,6 @@
 let stompClient = null;
 let currentRoom = null;
-let playerName = "Player" + Math.floor(Math.random() * 1000); // Nome aleatório para o jogador
+let playerName = null;
 
 function connect() {
     const socket = new SockJS('http://localhost:8080/ws'); // Conecta ao backend
@@ -8,8 +8,15 @@ function connect() {
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
         updateRoomsList();
+
+        // Subscribe ao tópico 'home' para receber atualizações de criação de sala
+        stompClient.subscribe('/topic/home', function (message) {
+            console.log('Nova sala criada: ' + message.body);
+            updateRoomsList(); // Atualiza a lista de salas ao receber uma nova atualização
+        });
     });
 }
+
 
 function updateRoomsList() {
     fetch('http://localhost:8080/game/rooms') // Lista salas do backend
@@ -35,8 +42,7 @@ function createRoom() {
             },
             body: `name=${roomName}`
         }).then(response => response.text())
-          .then(message => {
-              alert(message);
+          .then(() => {
               updateRoomsList();
           });
     }
@@ -44,8 +50,11 @@ function createRoom() {
 
 function joinRoom() {
     const roomName = document.getElementById('room-name').value;
-    if (roomName) {
+    const playerNameInput = document.getElementById('player-name').value; // Obtém o nome do jogador
+    playerName = playerNameInput;
+    if (roomName && playerNameInput) {
         currentRoom = roomName;
+        const playerName = playerNameInput; // Usa o nome fornecido pelo usuário
         stompClient.subscribe(`/topic/${roomName}`, function (message) {
             console.log(message);
             const gameResult = document.getElementById('game-result');
